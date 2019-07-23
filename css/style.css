@@ -12,7 +12,38 @@ line {
 }
 
 text {
+  color: white;
   font: 24px "Helvetica Neue", Helvetica, Arial, sans-serif;
   text-anchor: middle;
   pointer-events: none;
+}
+
+
+.bubbles {
+  stroke-width: 2px;
+  stroke: white;
+}
+.bubbles:hover {
+  stroke: #293E40;
+}
+
+#legend {
+  text-align: center;
+  /* border: 1.5px solid '#293E40';*/
+  margin-top: 20px;
+  padding: 20px 0 30px 20px;
+}
+
+#legend.span.title {
+  font-weight: bold;
+  color: #293E40;
+}
+
+#legend.span.title_value {
+  font-weight: bold;
+  color: #81B5A1;
+}
+
+.chart{
+  text-align:center;
 }

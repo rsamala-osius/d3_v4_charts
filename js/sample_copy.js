@@ -32,31 +32,30 @@ simulation.stop();
 
 
 function createNodes(rawData, noOfValues) {
-  rawData = rawData.sort(function (y, x) { return x.count.total_effort - y.count.total_effort } ).slice(0,noOfValues);
+  let sortByFiled = 'values';  //'count.total_effort'
+  rawData = rawData.sort(function (y, x) { return x[sortByFiled].length - y[sortByFiled].length } ).slice(0,noOfValues);
   // use max size in the data as the max in the scale's domain
   // note we have to ensure that size is a number
-  var maxSize = d3.max(rawData, function(d) { return  +d.count.total_effort });
+  var maxSize = d3.max(rawData, function(d) { return  +d[sortByFiled].length });
   // size bubbles based on area
   var radiusScale = d3.scaleSqrt()
     .domain([0, maxSize])
-    .range([0, 150])
+    .range([0, 150]);
 
   // use map() to convert raw data into node data
-  var myNodes = rawData.map(function(d) {
+  return rawData.map(function (d) {
     return {
-      //...d,
       name: d.name,
-      radius: radiusScale(+d.count.total_effort),
-      size: +d.count.total_effort,
+      radius: radiusScale(d[sortByFiled].length),
+      size: d[sortByFiled].length,
       x: Math.random() * 900,
       y: Math.random() * 800
     };
-  })
-  return myNodes;
+  });
 }
 
 function ready(err, dataPoints) {
-  // dataPoints = createNodes(productData, 5);
+  // dataPoints = createNodes(productData, 10);
   dataPoints = createNodes(dataPoints, 10);
   var averageValue = d3.mean(dataPoints, function(d) { return  +d.size });
 
@@ -131,5 +130,6 @@ function ready(err, dataPoints) {
   }
 }
 
-d3.json('http://localhost:8081/get_davies', ready)
+// d3.json('http://localhost:8081/get/davies', ready)
+d3.json('http://localhost:8081/get/digital', ready)
 // d3.queue().await(ready);
