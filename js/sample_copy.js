@@ -10,6 +10,7 @@ var width = 600, height = 600;
 
 var centre = { x: width / 2, y: height / 2 };
 var forceStrength = 0.03;
+var circle_size = 4;
 
 // these will be set in createNodes and chart functions
 var svg = null;
@@ -32,7 +33,7 @@ simulation.stop();
 
 
 function createNodes(rawData, noOfValues) {
-  let sortByFiled = 'values';  //'count.total_effort'
+  var sortByFiled = 'values';  //'count.total_effort'
   rawData = rawData.sort(function (y, x) { return x[sortByFiled].length - y[sortByFiled].length } ).slice(0,noOfValues);
   // use max size in the data as the max in the scale's domain
   // note we have to ensure that size is a number
@@ -113,7 +114,16 @@ function ready(err, dataPoints) {
     .attr('dy', '.3em')
     .style('text-anchor', 'middle')
     .style('font-size', 10)
-    .text(function(d) { return d.name })
+    .text(function(d) { return d.name.match(/\b\w/g).join('') + ' ('+d.size+')'  })
+    .style("font-size", function(d) {
+      var r = Math.pow(d.radius, 0.2)*circle_size
+      var font = Math.min(2 * r, (2 * r - 8) / this.getComputedTextLength() * 24);
+      return font + "px";
+    })
+    .attr("dy", ".35em")
+    .style("fill", function(d) {
+      return 'white'
+    })
 
   simulation.nodes(dataPoints)
     .on('tick', ticked)
