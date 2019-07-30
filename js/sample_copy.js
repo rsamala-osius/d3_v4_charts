@@ -27,17 +27,17 @@ var radiusScale = d3.scaleSqrt().domain([1, 600]).range([10, 80]);
 var simulation = d3.forceSimulation()
   .force('x', d3.forceX().strength(forceStrength).x(centre.x))
   .force('y', d3.forceY().strength(forceStrength).y(centre.y))
-  .force('collision', d3.forceCollide().radius( function(d) { return d.radius + 2 }));
+  .force('collision', d3.forceCollide().radius(function (d) { return d.radius + 2 }));
 
 simulation.stop();
 
 
 function createNodes(rawData, noOfValues) {
   var sortByFiled = 'values';  //'count.total_effort'
-  rawData = rawData.sort(function (y, x) { return x[sortByFiled].length - y[sortByFiled].length } ).slice(0,noOfValues);
+  rawData = rawData.sort(function (y, x) { return x[sortByFiled].length - y[sortByFiled].length }).slice(0, noOfValues);
   // use max size in the data as the max in the scale's domain
   // note we have to ensure that size is a number
-  var maxSize = d3.max(rawData, function(d) { return  +d[sortByFiled].length });
+  var maxSize = d3.max(rawData, function (d) { return +d[sortByFiled].length });
   // size bubbles based on area
   var radiusScale = d3.scaleSqrt()
     .domain([0, maxSize])
@@ -58,8 +58,12 @@ function createNodes(rawData, noOfValues) {
 function ready(err, dataPoints) {
   // dataPoints = createNodes(productData, 10);
   dataPoints = createNodes(dataPoints, 10);
-  var averageValue = d3.mean(dataPoints, function(d) { return  +d.size });
+  var min = d3.min(dataPoints, d => d.size);
+  var max = d3.max(dataPoints, d => d.size);
+  var averageValue = (max - min) / 3   // d3.mean(dataPoints, function(d) { return  +d.size });
 
+  var div = document.getElementById('vis')
+  div.innerHTML = 'Min : ' + min + '#65adb2 <br>  Avg: ' + averageValue + '#81B5A1 <br> Max : ' + max + '#8686BC'
   svg = d3.select('#chart')
     .append('svg')
     .attr('height', height)
@@ -68,15 +72,14 @@ function ready(err, dataPoints) {
     .attr('transform', 'translate(0,0)');
 
   var circles = svg.selectAll('.artist')
-    .data(dataPoints, function(d) { return d.name })
+    .data(dataPoints, function (d) { return d.name })
     .enter()
     .append('g')
 
   var tip = d3.tip()
     .attr('class', 'd3-tip')
     .offset([-10, 0])
-    .html(function(d) {
-
+    .html(function (d) {
       return "<strong> Product:</strong> <span style='color:#81B5A1'>" + d.name + "</span>" +
         " <br /> <sgrong>Effort :</sgrong> <span style='color:#81B5A1'> " + d.size + "</span>";
     });
@@ -90,18 +93,22 @@ function ready(err, dataPoints) {
       return d.radius;
     })
     .attr('fill', function (d) {
-      if( d.size <= averageValue && d.size > 10) {
-        return '#65adb2';
-      } else if ( d.size > averageValue && d.size > (2 *averageValue) ) {
-        return '#81B5A1';
-      }
-      else if(d.size < 5){
-        return '#8686BC';
-      }
-      else if(d.size <= 10 && d.size >=5){
-        return '#72D0E2 ';
-      }
-      return '#293E40';
+      if (d.size < averageValue) return '#65adb2';
+      else if (d.size > averageValue && d.size <= 2 * averageValue) return '#81B5A1';
+      else if (d.size > (2 * averageValue)) return '#8686BC'
+
+      // if( d.size <= averageValue && d.size > 10) {
+      //   return '#65adb2';
+      // } else if ( d.size > averageValue && d.size > (2 *averageValue) ) {
+      //   return '#81B5A1';
+      // }
+      // else if(d.size < 5){
+      //   return '#8686BC';
+      // }
+      // else if(d.size <= 10 && d.size >=5){
+      //   return '#72D0E2 ';
+      // }
+      // return '#293E40';
 
       // return myColor(d.size);
     })
@@ -114,14 +121,21 @@ function ready(err, dataPoints) {
     .attr('dy', '.3em')
     .style('text-anchor', 'middle')
     .style('font-size', 10)
-    .text(function(d) { return d.name.match(/\b\w/g).join('') + ' ('+d.size+')'  })
-    .style("font-size", function(d) {
-      var r = Math.pow(d.radius, 0.2)*circle_size
-      var font = Math.min(2 * r, (2 * r - 8) / this.getComputedTextLength() * 24);
+    // .text(function (d) { return d.name.match(/\b\w/g).join('') + ' (' + d.size + ')' })
+    .text(function (d) {
+      var sizeAttr = ' (' + d.size + ')';
+      console.log('r ' + d.radius)
+      if (d.size > averageValue / 3) return d.name + sizeAttr
+      else return d.name.match(/\b\w/g).join('') + sizeAttr
+    })
+    .style("font-size", function (d) {
+      var r = Math.pow(d.size, 0.4) * 3
+      var font = Math.max(2 * r, (2 * r) / this.getComputedTextLength() * 24);
+      console.log('f ' + font)
       return font + "px";
     })
     .attr("dy", ".35em")
-    .style("fill", function(d) {
+    .style("fill", function (d) {
       return 'white'
     })
 
@@ -131,12 +145,12 @@ function ready(err, dataPoints) {
 
   function ticked() {
     bubbles
-      .attr('cx', function(d) { return d.x })
-      .attr('cy', function(d) { return d.y })
+      .attr('cx', function (d) { return d.x })
+      .attr('cy', function (d) { return d.y })
 
     labels
-      .attr('x', function(d) { return d.x })
-      .attr('y', function(d) { return d.y })
+      .attr('x', function (d) { return d.x })
+      .attr('y', function (d) { return d.y })
   }
 }
 
