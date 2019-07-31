@@ -1,11 +1,4 @@
 
-//	totalCount = productData.map( function(x) { return x.size; });
-//	var maxValue = Math.max.apply(null, totalCount);
-//  var minValue = Math.min.apply(null, totalCount);
-//	var averageValue = (maxValue + minValue) /3;
-//	var chartSize = 600;
-//	var width = chartSize , height = chartSize;
-
 var width = 600, height = 600;
 
 var centre = { x: width / 2, y: height / 2 };
@@ -58,12 +51,18 @@ function createNodes(rawData, noOfValues) {
 function ready(err, dataPoints) {
   // dataPoints = createNodes(productData, 10);
   dataPoints = createNodes(dataPoints, 10);
-  var min = d3.min(dataPoints, d => d.size);
-  var max = d3.max(dataPoints, d => d.size);
+
+  function truncateString(str, len) {
+    if(!len) len = 5
+    if(str.length > len) return str.substring(0, len) + '...'
+    return str
+  }
+  var min = d3.min(dataPoints, function(d) { return d.size});
+  var max = d3.max(dataPoints, function(d) { return d.size});
   var averageValue = (max - min) / 3   // d3.mean(dataPoints, function(d) { return  +d.size });
 
   var div = document.getElementById('vis')
-  div.innerHTML = 'Min : ' + min + '#65adb2 <br>  Avg: ' + averageValue + '#81B5A1 <br> Max : ' + max + '#8686BC'
+  div.innerHTML = 'Min : ' + min + ' #65adb2 <br>  Avg: ' + averageValue + ' #81B5A1 <br> Max : ' + max + ' #8686BC'
   svg = d3.select('#chart')
     .append('svg')
     .attr('height', height)
@@ -96,21 +95,6 @@ function ready(err, dataPoints) {
       if (d.size < averageValue) return '#65adb2';
       else if (d.size > averageValue && d.size <= 2 * averageValue) return '#81B5A1';
       else if (d.size > (2 * averageValue)) return '#8686BC'
-
-      // if( d.size <= averageValue && d.size > 10) {
-      //   return '#65adb2';
-      // } else if ( d.size > averageValue && d.size > (2 *averageValue) ) {
-      //   return '#81B5A1';
-      // }
-      // else if(d.size < 5){
-      //   return '#8686BC';
-      // }
-      // else if(d.size <= 10 && d.size >=5){
-      //   return '#72D0E2 ';
-      // }
-      // return '#293E40';
-
-      // return myColor(d.size);
     })
     .on('mouseover', tip.show)
     .on('mouseout', tip.hide);
@@ -118,26 +102,24 @@ function ready(err, dataPoints) {
   // labels
   labels = circles
     .append('text')
-    .attr('dy', '.3em')
-    .style('text-anchor', 'middle')
-    .style('font-size', 10)
-    // .text(function (d) { return d.name.match(/\b\w/g).join('') + ' (' + d.size + ')' })
+
     .text(function (d) {
       var sizeAttr = ' (' + d.size + ')';
-      console.log('r ' + d.radius)
-      if (d.size > averageValue / 3) return d.name + sizeAttr
+      if (d.size > averageValue / 2) {
+        return d.name + sizeAttr
+      }
       else return d.name.match(/\b\w/g).join('') + sizeAttr
     })
     .style("font-size", function (d) {
-      var r = Math.pow(d.size, 0.4) * 3
-      var font = Math.max(2 * r, (2 * r) / this.getComputedTextLength() * 24);
-      console.log('f ' + font)
-      return font + "px";
+      var r = d.radius // Math.pow(d.radius, 0.4) * 3
+      var font = Math.min(2 * r , (2 * r - 8 ) / this.getComputedTextLength() * 24);
+      var fontSize = Math.ceil(font) + "px";
+      console.log(fontSize)
+
+      return fontSize
     })
     .attr("dy", ".35em")
-    .style("fill", function (d) {
-      return 'white'
-    })
+    .style("fill", 'white')
 
   simulation.nodes(dataPoints)
     .on('tick', ticked)
